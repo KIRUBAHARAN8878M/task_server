@@ -17,7 +17,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 const allowedOrigins = [
-  'https://task-client-nu.vercel.app/', 
+  'https://task-client-nu.vercel.app', 
   'http://localhost:5173'             
 ];
 
