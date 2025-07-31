@@ -56,10 +56,11 @@ app.use(errorHandler);
 connectDB().then(() => console.log(' DB connected'));
 
 // Export the app for Vercel
-export default app;
+
 
 // Optional: local dev server when not on Vercel
 if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
   const port = env.PORT || 3001;
   app.listen(port, () => console.log(`API local on :${port}`));
 }
+export default app;
