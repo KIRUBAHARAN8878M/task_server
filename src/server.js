@@ -16,14 +16,30 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
+const allowedOrigins = [
+  'https://task-client-nu.vercel.app/', 
+  'http://localhost:5173'             
+];
 
 app.use(
   cors({
-    origin: env.CLIENT_ORIGIN,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
   })
 );
+// app.use(
+//   cors({
+//     origin: env.CLIENT_ORIGIN,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     credentials: true,
+//   })
+// );
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }); // 300 requests / 15 min per IP
 app.use(limiter);
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
