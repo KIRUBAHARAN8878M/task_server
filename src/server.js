@@ -43,6 +43,9 @@ app.use(
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }); // 300 requests / 15 min per IP
 app.use(limiter);
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
+app.get('/', (req, res) => {
+  res.send('✅ Backend deployed successfully');
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
