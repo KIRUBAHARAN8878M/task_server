@@ -31,7 +31,7 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
-
+app.options('*', cors());
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
 app.use(limiter);
 
