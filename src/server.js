@@ -39,7 +39,7 @@ app.use(
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
 app.use(limiter);
 
-// ✅ No '/api' prefix here – Vercel adds it
+//  No '/api' prefix here – Vercel adds it
 app.get('/', (req, res) => {
   res.send('✅ Backend deployed successfully');
 });
@@ -53,7 +53,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Connect DB once
-connectDB().then(() => console.log('✅ DB connected'));
+connectDB().then(() => console.log(' DB connected'));
 
 // Export the app for Vercel
 export default app;
