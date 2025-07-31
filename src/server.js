@@ -14,13 +14,13 @@ import { notFound, errorHandler } from './middlewares/error.js';
 
 const app = express();
 
-// -------------------- Middleware --------------------
+// Middleware
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-// -------------------- CORRECT CORS HANDLING --------------------
+// CORS config
 const allowedOrigins = [
   'https://task-client-nu.vercel.app',
   'http://localhost:5173',
@@ -41,33 +41,29 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
+// ✅ Global CORS (apply before routes)
 app.use(cors(corsOptions));
-// ✅ This MUST come after `app.use(cors(...))`
+
+// ✅ Must come immediately after to allow OPTIONS preflight
 app.options('*', cors(corsOptions));
 
-// -------------------- Rate Limit --------------------
+// Rate limiter
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
-// -------------------- Routes --------------------
-app.get('/', (req, res) => {
-  res.send('✅ Backend deployed successfully');
-});
-
-app.get('/health', (_req, res) => {
-  res.status(200).json({ message: 'ok' });
-});
-
-// ✅ All APIs WITHOUT /api prefix
+// ✅ DO NOT use '/api' here – Vercel adds it
 app.use('/auth', authRoutes);
 app.use('/tasks', taskRoutes);
 app.use('/users', userRoutes);
 
+// Health check (optional)
+app.get('/', (req, res) => res.send('✅ Backend OK'));
+app.get('/health', (_req, res) => res.json({ message: 'ok' }));
 
-// -------------------- Error Handlers --------------------
+// Errors
 app.use(notFound);
 app.use(errorHandler);
 
-// -------------------- DB Connect --------------------
+// DB connection
 let dbConnected = false;
 async function initDB() {
   if (!dbConnected) {
@@ -78,11 +74,10 @@ async function initDB() {
 }
 initDB();
 
-// -------------------- Dev Server --------------------
+// Dev mode
 if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
   const port = env.PORT || 3001;
-  app.listen(port, () => console.log(`🚀 Local API running on http://localhost:${port}`));
+  app.listen(port, () => console.log(`🚀 Local API on http://localhost:${port}`));
 }
 
-// -------------------- Vercel Export --------------------
 export default app;
