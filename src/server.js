@@ -19,20 +19,16 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS allowlist (no trailing slash)
-const allowedOrigins = [
-  'https://task-client-nu.vercel.app',
-  'http://localhost:5173',
-];
-
 app.use(
   cors({
-    origin(origin, cb) {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error('Not allowed by CORS'));
-    },
+    origin: [
+      'https://task-client-nu.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:5174'
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
@@ -45,7 +41,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.status(200).json({ status: 'ok' });
 });
 
 app.use('/auth', authRoutes);
