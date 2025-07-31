@@ -1,6 +1,6 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import cors from 'cors';
+// import cors from 'cors'; // ← not needed while we use manual CORS
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
@@ -20,7 +20,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-// ----- CORS (global) -----
+// ----- HARDENED CORS (manual, global) -----
 const allowedOrigins = new Set([
   'https://task-client-nu.vercel.app',
   'http://localhost:5173',
@@ -36,18 +36,10 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   }
-
+  // Short-circuit preflight
   if (req.method === 'OPTIONS') {
-    // End preflight right here with headers already set
     return res.sendStatus(204);
   }
-  next();
-});
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));           // let CORS set headers
-app.use((req, res, next) => {                  // ensure 204 for all preflights
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
