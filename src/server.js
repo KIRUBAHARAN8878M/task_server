@@ -14,66 +14,59 @@ import { notFound, errorHandler } from './middlewares/error.js';
 
 const app = express();
 
-// -------------------- Security & Basic Middleware --------------------
+// -------------------- Middleware --------------------
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-// -------------------- Improved Dynamic CORS --------------------
+// -------------------- CORRECT CORS HANDLING --------------------
 const allowedOrigins = [
-  'https://task-client-nu.vercel.app', // Your deployed frontend
+  'https://task-client-nu.vercel.app',
   'http://localhost:5173',
-  'http://localhost:5174',
-  // Add your custom domain here if you start using one, e.g.:
-  // 'https://your-custom-domain.com'
+  'http://localhost:5174'
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow REST tools or same-origin requests with no Origin
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn(`❌ CORS blocked for origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`❌ CORS blocked for origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
-// Handle preflight requests for all routes
-app.options('*', cors());
+app.use(cors(corsOptions));
+// ✅ This MUST come after `app.use(cors(...))`
+app.options('*', cors(corsOptions));
 
-// -------------------- Rate Limiting --------------------
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
-app.use(limiter);
+// -------------------- Rate Limit --------------------
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
-// -------------------- Health & Base Routes --------------------
+// -------------------- Routes --------------------
 app.get('/', (req, res) => {
   res.send('✅ Backend deployed successfully');
 });
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'ok' });
+app.get('/api/health', (_req, res) => {
+  res.json({ message: 'ok' });
 });
 
-// -------------------- Feature Routes --------------------
+// ✅ All APIs now under /api/*
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
-
 
 // -------------------- Error Handlers --------------------
 app.use(notFound);
 app.use(errorHandler);
 
-// -------------------- MongoDB Connection --------------------
-// Cache DB connection in serverless to avoid reconnect loops
+// -------------------- DB Connect --------------------
 let dbConnected = false;
 async function initDB() {
   if (!dbConnected) {
@@ -84,13 +77,11 @@ async function initDB() {
 }
 initDB();
 
-// -------------------- Local Dev vs Vercel Export --------------------
-
-// Local dev only: listen on a port
+// -------------------- Dev Server --------------------
 if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
   const port = env.PORT || 3001;
-  app.listen(port, () => console.log(`🚀 API running locally on :${port}`));
+  app.listen(port, () => console.log(`🚀 Local API running on http://localhost:${port}`));
 }
 
-// Vercel requires export of the app as default
+// -------------------- Vercel Export --------------------
 export default app;
