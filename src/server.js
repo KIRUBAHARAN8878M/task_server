@@ -53,14 +53,15 @@ app.get('/', (req, res) => {
   res.send('✅ Backend deployed successfully');
 });
 
-app.get('/api/health', (_req, res) => {
-  res.json({ message: 'ok' });
+app.get('/health', (_req, res) => {
+  res.status(200).json({ message: 'ok' });
 });
 
-// ✅ All APIs now under /api/*
-app.use('/api/auth', authRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/users', userRoutes);
+// ✅ All APIs WITHOUT /api prefix
+app.use('/auth', authRoutes);
+app.use('/tasks', taskRoutes);
+app.use('/users', userRoutes);
+
 
 // -------------------- Error Handlers --------------------
 app.use(notFound);
