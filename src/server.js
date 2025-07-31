@@ -23,6 +23,7 @@ app.use(
   cors({
     origin: [
       'https://task-client-nu.vercel.app',
+      'https://task-server-inky-beta.vercel.app',
       'http://localhost:5173',
       'http://localhost:5174'
     ],
