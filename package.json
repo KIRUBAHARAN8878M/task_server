@@ -1,17 +1,16 @@
 {
   "name": "task_server",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed:admin": "node src/scripts/seedAdmin.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
