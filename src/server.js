@@ -16,10 +16,14 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: env.CLIENT_ORIGIN,
-  credentials: true
-}));
+
+app.use(
+  cors({
+    origin: env.CLIENT_ORIGIN,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  })
+);
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }); // 300 requests / 15 min per IP
 app.use(limiter);
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
