@@ -16,14 +16,15 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
+
 const allowedOrigins = [
-  'https://task-client-nu.vercel.app', 
-  'http://localhost:5173'             
+  'https://task-client-nu.vercel.app',
+  'http://localhost:5173',
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin(origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -33,27 +34,33 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   })
 );
-// app.use(
-//   cors({
-//     origin: env.CLIENT_ORIGIN,
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     credentials: true,
-//   })
-// );
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }); // 300 requests / 15 min per IP
+
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
 app.use(limiter);
-app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
+
+// ✅ Routes
 app.get('/', (req, res) => {
   res.send('✅ Backend deployed successfully');
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/users', userRoutes);
+app.get('/health', (_, res) => res.json({ status: 'ok' }));
+
+app.use('/auth', authRoutes);
+app.use('/tasks', taskRoutes);
+app.use('/users', userRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
 
-connectDB().then(() => {
-  app.listen(env.PORT, () => console.log(`API on :${env.PORT}`));
-});
+// ✅ Vercel doesn't use app.listen() — so only run this locally:
+if (process.env.NODE_ENV !== 'production') {
+  connectDB().then(() => {
+    app.listen(env.PORT, () => {
+      console.log(`API running at http://localhost:${env.PORT}`);
+    });
+  });
+} else {
+  connectDB().then(() => console.log('✅ DB Connected (Serverless)'));
+}
+
+export default app;
