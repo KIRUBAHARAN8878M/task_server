@@ -14,21 +14,21 @@ import { notFound, errorHandler } from './middlewares/error.js';
 
 const app = express();
 
-// Middleware
+// ----- Base middleware -----
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS config
+// ----- CORS (global) -----
 const allowedOrigins = [
   'https://task-client-nu.vercel.app',
   'http://localhost:5173',
-  'http://localhost:5174'
+  'http://localhost:5174',
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -41,29 +41,30 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
-// ✅ Global CORS (apply before routes)
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));           // let CORS set headers
+app.use((req, res, next) => {                  // ensure 204 for all preflights
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
-// ✅ Must come immediately after to allow OPTIONS preflight
-app.options('*', cors(corsOptions));
-
-// Rate limiter
+// ----- Rate limit AFTER preflight is handled -----
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
-// ✅ DO NOT use '/api' here – Vercel adds it
+// ----- Health & base -----
+app.get('/', (_req, res) => res.send('✅ Backend deployed successfully'));
+app.get('/health', (_req, res) => res.json({ message: 'ok' }));
+
+// ----- Routes (NO /api prefix here) -----
 app.use('/auth', authRoutes);
 app.use('/tasks', taskRoutes);
 app.use('/users', userRoutes);
 
-// Health check (optional)
-app.get('/', (req, res) => res.send('✅ Backend OK'));
-app.get('/health', (_req, res) => res.json({ message: 'ok' }));
-
-// Errors
+// ----- Errors -----
 app.use(notFound);
 app.use(errorHandler);
 
-// DB connection
+// ----- DB connect (cache for serverless) -----
 let dbConnected = false;
 async function initDB() {
   if (!dbConnected) {
@@ -74,7 +75,7 @@ async function initDB() {
 }
 initDB();
 
-// Dev mode
+// ----- Local dev only -----
 if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
   const port = env.PORT || 3001;
   app.listen(port, () => console.log(`🚀 Local API on http://localhost:${port}`));
